@@ -1,0 +1,39 @@
+# require-tags.sentinel
+#
+# Enforcement: soft-mandatory (a workspace admin can override).
+# Every workload must carry a non-empty owner and environment label.
+
+import "tfplan/v2" as tfplan
+
+required_labels = ["owner", "environment"]
+
+workload_changes = filter tfplan.resource_changes as _, rc {
+	rc.type is "docker_container" and
+	rc.mode is "managed" and
+	(rc.change.actions contains "create" or rc.change.actions contains "update")
+}
+
+missing_labels = func(rc) {
+	missing = []
+	for required_labels as required {
+		found = filter rc.change.after.labels as _, l {
+			l.label is required and l.value is not ""
+		}
+		if length(found) is 0 {
+			append(missing, required)
+		}
+	}
+	return missing
+}
+
+violations = filter workload_changes as _, rc {
+	length(missing_labels(rc)) > 0
+}
+
+for violations as addr, rc {
+	print("✗", addr, "missing required labels:", missing_labels(rc))
+}
+
+main = rule {
+	length(violations) is 0
+}

@@ -1,0 +1,20 @@
+services:
+  agent:
+    image: hashicorp/tfc-agent:latest
+    container_name: terraform-day0-agent
+    restart: unless-stopped
+    environment:
+      TFC_AGENT_TOKEN: "${TFC_AGENT_TOKEN}"
+      TFC_AGENT_NAME: "${TFC_AGENT_NAME:-booth-laptop}"
+      TFC_AGENT_SINGLE: "false"
+    volumes:
+      # Lets the terraform runs this agent executes reach the Docker Engine
+      # API — the kreuzwerker/docker provider talks to it directly, no
+      # `docker` CLI needed inside the agent container.
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - terraform-day0-net
+
+networks:
+  terraform-day0-net:
+    name: terraform-day0-net

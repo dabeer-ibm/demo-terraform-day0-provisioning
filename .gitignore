@@ -1,0 +1,10 @@
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfplan
+terraform/candidate.tfvars.json
+sentinel/.sentinel/
+sentinel/mock-tfplan-v2.sentinel
+sentinel/local-test.hcl
+agent/.env

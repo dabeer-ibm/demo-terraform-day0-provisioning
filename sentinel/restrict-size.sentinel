@@ -1,0 +1,28 @@
+# restrict-size.sentinel
+#
+# Enforcement: hard-mandatory (cannot be overridden).
+# Only small, medium, or large workloads are allowed through self-service.
+
+import "tfplan/v2" as tfplan
+
+allowed_sizes = ["small", "medium", "large"]
+
+workload_changes = filter tfplan.resource_changes as _, rc {
+	rc.type is "docker_container" and
+	rc.mode is "managed" and
+	(rc.change.actions contains "create" or rc.change.actions contains "update")
+}
+
+violations = filter workload_changes as _, rc {
+	any rc.change.after.labels as l {
+		l.label is "size" and l.value not in allowed_sizes
+	}
+}
+
+for violations as addr, rc {
+	print("✗", addr, "requests a size outside the approved catalog (small/medium/large)")
+}
+
+main = rule {
+	length(violations) is 0
+}
